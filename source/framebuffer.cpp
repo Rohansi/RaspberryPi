@@ -21,6 +21,7 @@ Framebuffer Framebuffer::init(size_t width, size_t height)
         
         buf.write(TagSetClockRate(ClockID::v3d, 250_mHz));
         buf.write(TagEnableQPU(true));
+        buf.write(TagSetClockRate(ClockID::arm, 900_mHz)); // TODO: do this somewhere else
         buf.write(TagEnd());
         
         if (buf.fail())

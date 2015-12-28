@@ -16,7 +16,7 @@ add r0, r0, r1          # r0 = r0 + r1      (add X coordinate to r0)
                         # r0 = linear index to image pixel
 
 shl r0, r0, 2           # r0 = r0 << 2      (multiply by sizeof(uint32_t), gives us index in bytes)
-mov r3, 0x1000000
+mov r3, 0x81000000      # image base pointer, L2 cached only
 add r0, r0, r3          # r0 = index + image base pointer
 
 mov t0s, r0; sbwait     # write to t0s adds it to a queue to load

@@ -1,6 +1,4 @@
 #include "terminal.h"
-#include "buffer.h"
-#include "control_list.h"
 #include "io.h"
 #include "uart.h"
 #include "terminal_data.h"
@@ -9,42 +7,24 @@ Terminal Terminal::init(const Framebuffer &framebuffer)
 {
     Terminal result;
     
-    uart_puts("terminal init\r\n");
-    
-    result._framebuffer = framebuffer;
-    return result;
-}
-
-struct TerminalUniforms
-{
-    size_t terminal_width;              // in characters
-    const Character *terminal_data;     //
-    const uint32_t *palette_data_fg;    // foreground palette colors, 256 max
-    const uint32_t *palette_data_bg;    // background palette colors, 256 max
-    const uint8_t *font_data;           // pointer to 8x12 RGBA font data, 256 characters, 16 per row
-};
-
-void Terminal::render(const Character *buffer) const
-{
     uint8_t *bin_addr = (uint8_t*)0x400000;
     uint8_t *bin_base = (uint8_t*)0x500000;
     
     // size of framebuffer in tiles
-    size_t tx = (_framebuffer.width() + 63) / 64; // TODO: what controls the tile size?
-    size_t ty = (_framebuffer.height() + 63) / 64;
+    size_t tx = (framebuffer.width() + 63) / 64; // TODO: what controls the tile size?
+    size_t ty = (framebuffer.height() + 63) / 64;
     
     // size of terminal in characters
-    size_t cx = _framebuffer.width() / 8;
+    size_t cx = framebuffer.width() / 8;
     
-    alignas(16) TerminalUniforms uniforms;
+    TerminalUniforms &uniforms = result.uniforms;
     uniforms.terminal_width = cx;
-    uniforms.terminal_data = buffer;
     uniforms.palette_data_fg = &palette[0];
     uniforms.palette_data_bg = &palette[0];
     uniforms.font_data = &terminal_font.data[0];
     
     // shader state
-    alignas(16) NVShaderState shaderState;
+    NVShaderState &shaderState = result.shaderState;
     shaderState.fragment_shader = &shader_code;
     shaderState.uniform_count = 5;
     shaderState.fragment_shader_uniforms = &uniforms;
@@ -52,10 +32,10 @@ void Terminal::render(const Character *buffer) const
     shaderState.vertex_data = &vertices;
     
     // binning control list
-    WriteBuffer<128, 16> binBuf;
+    WriteBuffer<128, 16> &binBuf = result.binBuf;
     binBuf.write(ControlTileBinningConfig(bin_addr, 0x2000, bin_base, tx, ty, ControlTileBinningConfigFlags::auto_init_state));
     binBuf.write(ControlStartTileBinning());
-    binBuf.write(ControlClipWindow(0, 0, _framebuffer.width(), _framebuffer.height()));
+    binBuf.write(ControlClipWindow(0, 0, framebuffer.width(), framebuffer.height()));
     binBuf.write(ControlConfigBits( (ControlConfigBitsFlags)((size_t)ControlConfigBitsFlags::forward_facing | (size_t)ControlConfigBitsFlags::reverse_facing | (size_t)ControlConfigBitsFlags::early_z_updates) ));
     binBuf.write(ControlViewportOffset(0, 0));
     binBuf.write(ControlNVShaderState(&shaderState));
@@ -66,13 +46,13 @@ void Terminal::render(const Character *buffer) const
     if (binBuf.fail())
     {
         uart_puts("binning buffer too small\r\n");
-        return;
+        return result;
     }
     
     // rendering control list
-    WriteBuffer<32 * 1024, 16> renBuf;
-    renBuf.write(ControlClearColors(0xFF00FFFF));
-    renBuf.write(ControlTileRenderingConfig(_framebuffer, ControlTileRenderingConfigFlags::color_format_rgba8888));
+    WriteBuffer<32 * 1024, 16> &renBuf = result.renBuf;
+    //renBuf.write(ControlClearColors(0xFF00FFFF));
+    renBuf.write(ControlTileRenderingConfig(framebuffer, ControlTileRenderingConfigFlags::color_format_rgba8888));
     renBuf.write(ControlTileCoordinates(0, 0));
     renBuf.write(ControlStoreTileBuffer()); // TODO: params
     
@@ -93,8 +73,19 @@ void Terminal::render(const Character *buffer) const
     if (renBuf.fail())
     {
         uart_puts("render buffer too small\r\n");
-        return;
+        return result;
     }
+    
+    result._framebuffer = framebuffer;
+    return result;
+}
+
+template <typename T>
+static inline T *only_L2_cached(T *ptr) { return (T*)((size_t)ptr | 0x80000000); }
+
+void Terminal::render(const Character *buffer)
+{
+    uniforms.terminal_data = only_L2_cached(buffer);
     
     size_t binAddr = (size_t)binBuf.data();
     
@@ -120,7 +111,7 @@ void Terminal::render(const Character *buffer) const
     
     while (mmio_read(V3D_RFC) == 0) { }             // wait for it to finish
     
-    uart_puts("done!\r\n");
+    //uart_puts("done!\r\n");
     
     /*uart_printf("\r\n");
     uart_printf("V3D_ERRSTAT: 0x%.8x\r\n", mmio_read(V3D_ERRSTAT));

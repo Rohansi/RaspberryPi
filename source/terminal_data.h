@@ -7,19 +7,19 @@ struct Vertex {
     float w;
 } __attribute__((packed));
 
-alignas(16) static Vertex vertices[] = {
+/*alignas(16) static Vertex vertices[] = {
     { 32   << 4, 32   << 4, 1, 1 }, // top left
     { 32   << 4, 1048 << 4, 1, 1 }, // bottom left
     { 1888 << 4, 32   << 4, 1, 1 }, // top right
     { 1888 << 4, 1048 << 4, 1, 1 }  // bottom right
-};
+};*/
 
-/*alignas(16) static Vertex vertices[] = {
+alignas(16) static Vertex vertices[] = {
     { 0    << 4, 0    << 4, 1, 1 }, // top left
     { 0    << 4, 1080 << 4, 1, 1 }, // bottom left
     { 1920 << 4, 0    << 4, 1, 1 }, // top right
     { 1920 << 4, 1080 << 4, 1, 1 }  // bottom right
-};*/
+};
 
 alignas(16) static uint32_t palette[] = {
     0xFF000000, //   0
@@ -41,5 +41,5 @@ alignas(16) static uint32_t palette[] = {
 };
 
 alignas(16) static uint32_t shader_code[] = {
-    #include "texter-simple.qpu.inc"
+    #include "texter.qpu.inc"
 };

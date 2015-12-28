@@ -1,17 +1,18 @@
 AS          = arm-none-eabi-as
-ASFLAGS     =
+ASFLAGS     = $(ARCH)
 CC          =
 CFLAGS      =
 CXX         = arm-none-eabi-g++
-CXXARCH     = -mcpu=cortex-a7
 CXXBARE     = -ffreestanding -fno-builtin -nostdlib -fno-exceptions -fno-rtti -fno-stack-protector -nostdinc++
 CXXSTD      = -std=c++14 -Wall -Wextra -Wpedantic -Werror -O3
-CXXFLAGS    = -c $(foreach INCDIR, $(INCDIRS), -I$(INCDIR)) $(CXXSTD) $(CXXARCH) $(CXXBARE)
+CXXFLAGS    = -c $(foreach INCDIR, $(INCDIRS), -I$(INCDIR)) $(CXXSTD) $(CXXBARE) $(ARCH)
 LD          = arm-none-eabi-ld
 LDFLAGS     =
 LIBGCC      = /opt/cross/lib/gcc/arm-none-eabi/5.3.0/libgcc.a
 QAS         = vc4asm
 QASFLAGS    = -V
+
+ARCH        = -mcpu=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard
 
 SRCDIR      = source
 INCDIRS     = include $(QPUDIR)

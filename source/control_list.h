@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "string.h"
 #include "framebuffer.h"
 
 // the structs in here shouldn't have any padding, which

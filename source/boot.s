@@ -12,7 +12,7 @@
 // preserve these registers as argument for kmain
 _start:
 	// Setup the stack.
-	mov sp, #0x2000000
+	mov sp, #0x50000
     push {ip, lr}
     
 	// Clear out bss.
@@ -34,6 +34,19 @@ _start:
 	blo 1b
     
     push {r0-r2}
+    
+    // Enable L1 cache
+    mrc p15, 0, r0, c1, c0, 0
+    ldr r1, =#0x1800 // branch prediction, instruction cache
+    orr r0, r1
+    mcr p15, 0, r0, c1, c0, 0
+    
+    // Enable VFP
+    mrc p15, 0, r0, c1, c0, 2
+    orr r0, #0xF00000 // single and double precision
+    mcr p15, 0, r0, c1, c0, 2
+    mov r0, #0x40000000 // enable VFP
+    vmsr fpexc, r0
     
     // Setup access to the OK LED
     ldr r0, =0x3F200000
@@ -58,3 +71,25 @@ _start:
 1:
 	wfe
 	b 1b
+
+.globl _start1
+_start1:
+    mov sp, #0x60000
+    ldr r0, =core1
+    blx r0
+    b _start1
+
+.globl _start2
+_start2:
+    mov sp, #0x70000
+    ldr r0, =core2
+    blx r0
+    b _start2
+
+.globl _start3
+_start3:
+    mov sp, #0x80000
+    ldr r0, =core3
+    blx r0
+    b _start3
+
