@@ -46,6 +46,10 @@ void kmain(uint32_t r0, uint32_t r1, uint32_t atags)
         size_t length = width * height;
         
         Character *buf = (Character*)0x1000000;
+        for (size_t i = 0; i < length; i++)
+        {
+            buf[i] = { 0, 0, 0, 0 };
+        }
         
         size_t g = 3;
         size_t c = 0;

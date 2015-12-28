@@ -8,16 +8,12 @@ ftoi r1, r0                 # r1 = (int)r0
 mov ra0.16b, r1             # ra0.y = r1
 
 # calculate linear character position (r0 = chPos)
-mov r1, unif                # r1 = TERMINAL_WIDTH
-mov r0, ra0.16b             # r0 = ra0.y
-mul24 r0, r0, r1            # r0 = r0 * r1
-mov r1, ra0.16a             # r1 = ra0.x
-add r0, r0, r1              # r0 = r0 + 1
+mul24 r0, r1, unif          # r0 = r1 * TERMINAL_WIDTH
+add r0, r0, ra0.16a         # r0 = r0 + ra0.x
 shl r0, r0, 2               # r0 = r0 << 2          (multiply by 4)
 
 # load character data (r4 = chData)
-add r0, r0, unif            # r0 = r0 + TERMINAL_DATA
-mov t0s, r0                 # t0s = r0              (enqueue memory load)
+add t0s, r0, unif           # t0s = r0 + TERMINAL_DATA (enqueue memory load)
 ldtmu0                      # r4 = chData           (dequeue memory load)
 
 # setup some values we're going to reuse
@@ -65,8 +61,7 @@ add r0, r0, ra2.16a         # r0 = r0 + ra2.x
 shl r0, r0, 2               # r0 = r0 << 2          (multiply by 4)
 
 # enqueue load font color
-add r0, r0, unif            # r0 = r0 + FONT_DATA
-mov t0s, r0                 # t0s = r0              (enqueue memory load)
+add t0s, r0, unif           # t0s = r0 + FONT_DATA  (enqueue memory load)           
 
 # dequeue color lookups into accumulators
 ldtmu0
