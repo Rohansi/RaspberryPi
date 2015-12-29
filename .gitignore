@@ -1,6 +1,6 @@
 # Build outputs
-/bin
-/obj
+bin/
+obj/
 
 # Compiled Object files
 *.slo
@@ -30,3 +30,6 @@
 *.exe
 *.out
 *.app
+
+# Visual Studio stuff
+.vs/

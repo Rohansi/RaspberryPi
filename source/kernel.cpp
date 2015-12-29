@@ -56,11 +56,6 @@ void kmain(uint32_t r0, uint32_t r1, uint32_t atags)
         
         while (true)
         {
-            // clear caches
-            mmio_write(V3D_L2CACTL, 4);
-            mmio_write(V3D_SLCACTL, 0x0F0F0F0F);
-            asm volatile("dmb");
-            
             /*for (size_t i = 0; i < length; i++)
             {
                 buf[i] = { (uint8_t)(1 + c % 15), 0, (uint8_t)(g++ + c), 0 };

@@ -31,33 +31,23 @@ and r0, r3, ra5             # r0 = r3 & ra5         (background index)
 shl r0, r0, 2               # r0 = r0 << 2          (multiply by 4)
 add t0s, r0, unif           # t0s = r0 + PALETTE_DATA_BG
 
-# calculate glyph position (ra1 = fnX/fnY)
+# calculate glyph position (r3 = fnI)
 shr r3, r3, 8               # r3 = r3 >> 8          (next field)
-and r1, r3, ra5             # r1 = r3 & ra5         (glyph index)
+and r0, r3, ra5             # r0 = r3 & ra5         (glyph index)
+ldi r1, 8 * 12              # r1 = number of pixels per glyph
+mul24 r3, r0, r1            # r3 = r0 * r1
 
-and r0, r1, 15              # r0 = r1 & 15          (modulus by 16)
-shl r0, r0, 3               # r0 = r0 << 3          (multiply by 8)
-mov ra1.16a, r0             # ra1.x = r0
-
-shr r0, r1, 4               # r0 = r1 >> 4          (divide by 16)
-mul24 r0, r0, 12            # r0 = r0 * 12
-mov ra1.16b, r0             # ra1.y = r0
-
-# calculate glyph offset (ra2 = fnXO/fnYO)
+# calculate glyph offset (r2 = fnXO, r1 = fnYO)
 shl r0, ra0.16a, 3          # r0 = ra0.x << 3       (multiply by 8)
-sub r0, x_coord, r0         # r0 = x_coord - r0
-add r0, r0, ra1.16a         # r0 = r0 + ra1.x
-mov ra2.16a, r0             # ra2.x = r0 + ra1.x
+sub r2, x_coord, r0         # r2 = x_coord - r0
 
 mul24 r0, ra0.16b, 12       # r0 = ra0.y * 12
-sub r0, y_coord, r0         # r0 = y_coord - r0
-add r0, r0, ra1.16b         # r0 = r0 + ra1.y
-mov ra2.16b, r0             # ra2.y = r0 + ra1.y
+sub r1, y_coord, r0         # r1 = y_coord - r0
 
 # calculate linear glyph position (r0 = fnPos)
-ldi r1, 16 * 8              # r1 = width of font image
-mul24 r0, ra2.16b, r1       # r0 = ra2.y * r1
-add r0, r0, ra2.16a         # r0 = r0 + ra2.x
+shl r1, r1, 3               # r1 = r1 << 3          (multiply by 8)
+add r0, r1, r2              # r0 = r1 + r2 (fnXO)
+add r0, r0, r3              # r0 = r0 + r3 (fnI) 
 shl r0, r0, 2               # r0 = r0 << 2          (multiply by 4)
 
 # enqueue load font color
@@ -108,13 +98,12 @@ sbdone
 #  - enqueue PALETTE_DATA[chData.b]
 
 # calculate glyph position
-#  - fnX = (chData.r % 16) * 8
-#  - fnY = (chData.r / 16) * 12
+#  - fnI = chData.r * (8 * 12)
 
 # calculate glyph offset
-#  - fnXO = fnX + (x_coord % 8)
-#  - fnYO = fnY + (y_coord % 12)
-#  - fnPos = ((fnYO * (16 * 8)) + fnXO) * 4
+#  - fnXO = x_coord % 8
+#  - fnYO = y_coord % 12
+#  - fnPos = (fnI + (fnYO * 8 + fnXO)) * 4
 
 # queue load glyph color
 #  - enqueue FONT_DATA[fnPos]

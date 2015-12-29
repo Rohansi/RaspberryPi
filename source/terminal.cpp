@@ -3,6 +3,9 @@
 #include "uart.h"
 #include "terminal_data.h"
 
+template <typename T>
+static inline T *only_L2_cached(T *ptr) { return (T*)((size_t)ptr | 0x80000000); }
+
 Terminal Terminal::init(const Framebuffer &framebuffer)
 {
     Terminal result;
@@ -27,7 +30,7 @@ Terminal Terminal::init(const Framebuffer &framebuffer)
     NVShaderState &shaderState = result.shaderState;
     shaderState.fragment_shader = &shader_code;
     shaderState.uniform_count = 5;
-    shaderState.fragment_shader_uniforms = &uniforms;
+    shaderState.fragment_shader_uniforms = &result.uniforms;
     shaderState.vertex_stride = 12;
     shaderState.vertex_data = &vertices;
     
@@ -80,11 +83,13 @@ Terminal Terminal::init(const Framebuffer &framebuffer)
     return result;
 }
 
-template <typename T>
-static inline T *only_L2_cached(T *ptr) { return (T*)((size_t)ptr | 0x80000000); }
-
 void Terminal::render(const Character *buffer)
 {
+    // clear caches
+    mmio_write(V3D_L2CACTL, 4);
+    mmio_write(V3D_SLCACTL, 0x0F0F0F0F);
+    asm volatile("dmb");
+    
     uniforms.terminal_data = only_L2_cached(buffer);
     
     size_t binAddr = (size_t)binBuf.data();

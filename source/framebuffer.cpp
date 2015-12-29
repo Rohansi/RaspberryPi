@@ -63,16 +63,28 @@ Framebuffer Framebuffer::init(size_t width, size_t height)
         
         // make sure the display parameters were set correctly
         if (phys->width != width || phys->height != height)
+        {
+            uart_puts("physical display size changed\r\n");
             goto fail;
+        }
         
         if (virt->width != width || virt->height != height)
+        {
+            uart_puts("virtual buffer size changed\r\n");
             goto fail;
+        }
         
         if (depth->bpp != 32)
+        {
+            uart_puts("display depth changed\r\n");
             goto fail;
+        }
         
         if (offs->x != 0 || offs->y != 0)
+        {
+            uart_puts("virtual offset changed\r\n");
             goto fail;
+        }
         
         // convert address from VC to ARM
         uint32_t ptr = (uint32_t)fb->ptr & 0x3FFFFFFF;
