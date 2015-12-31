@@ -28,6 +28,7 @@ Terminal Terminal::init(const Framebuffer &framebuffer)
     
     // shader state
     NVShaderState &shaderState = result.shaderState;
+    shaderState.flags = NVShaderFlags::none;
     shaderState.fragment_shader = &shader_code;
     shaderState.uniform_count = 5;
     shaderState.fragment_shader_uniforms = &result.uniforms;

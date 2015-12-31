@@ -11,9 +11,13 @@
 // r2 -> 0x00000100 - start of ATAGS
 // preserve these registers as argument for kmain
 _start:
+    //mrc p15, 0, r5, c0, c0, 5
+    //and r5, #3
+    //cmp r5, #0
+    //bne halt
+    
 	// Setup the stack.
 	mov sp, #0x50000
-    push {ip, lr}
     
 	// Clear out bss.
 	ldr r4, =__bss_start
@@ -67,10 +71,9 @@ _start:
 	ldr r3, =kmain
 	blx r3
     
-	// halt
-1:
+halt:
 	wfe
-	b 1b
+	b halt
 
 .globl _start1
 _start1:

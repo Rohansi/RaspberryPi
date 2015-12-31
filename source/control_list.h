@@ -70,6 +70,7 @@ enum class PrimitiveMode : uint8_t
 enum class NVShaderFlags : uint8_t
 {
     // TODO: not sure if these are actually flags
+    none                            = 0,
     single_threaded                 = 1,
     has_point_size                  = 2,
     enable_clipping                 = 4,

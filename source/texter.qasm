@@ -10,6 +10,7 @@ mov ra0.16b, r1             # ra0.y = r1
 # calculate linear character position (r0 = chPos)
 mul24 r0, r1, unif          # r0 = r1 * TERMINAL_WIDTH
 add r0, r0, ra0.16a         # r0 = r0 + ra0.x
+thrsw                       # thread switch after 2 cycles
 shl r0, r0, 2               # r0 = r0 << 2          (multiply by 4)
 
 # load character data (r4 = chData)
@@ -23,13 +24,13 @@ mov r3, r4                  # r3 = 32 [ flags, glyph, bg, fg ] 0
 # enqueue load foreground color
 and r0, r3, ra5             # r0 = r3 & ra5         (foreground index)
 shl r0, r0, 2               # r0 = r0 << 2          (multiply by 4)
-add t0s, r0, unif           # t0s = r0 + PALETTE_DATA_FG
+add t1s, r0, unif           # t1s = r0 + PALETTE_DATA_FG
 
 # enqueue load background color
 shr r3, r3, 8               # r3 = r3 >> 8          (next field)
 and r0, r3, ra5             # r0 = r3 & ra5         (background index)
 shl r0, r0, 2               # r0 = r0 << 2          (multiply by 4)
-add t0s, r0, unif           # t0s = r0 + PALETTE_DATA_BG
+add t1s, r0, unif           # t1s = r0 + PALETTE_DATA_BG
 
 # calculate glyph position (r3 = fnI)
 shr r3, r3, 8               # r3 = r3 >> 8          (next field)
@@ -47,29 +48,24 @@ sub r1, y_coord, r0         # r1 = y_coord - r0
 # calculate linear glyph position (r0 = fnPos)
 shl r1, r1, 3               # r1 = r1 << 3          (multiply by 8)
 add r0, r1, r2              # r0 = r1 + r2 (fnXO)
-add r0, r0, r3              # r0 = r0 + r3 (fnI) 
+add r0, r0, r3;mov r2, unif # r0 = r0 + r3 (fnI)    r2 = FONT_DATA
+lthrsw                      # last thread switch after 2 cycles
 shl r0, r0, 2               # r0 = r0 << 2          (multiply by 4)
 
 # enqueue load font color
-add t0s, r0, unif           # t0s = r0 + FONT_DATA  (enqueue memory load)           
-
-# dequeue color lookups into accumulators
-ldtmu0
-mov r3, r4                  # r3 = foreground color
-ldtmu0
-mov r2, r4                  # r2 = background color
-ldtmu0                      # r4 = font color
+add t0s, r0, r2           # t0s = r0 + FONT_DATA  (enqueue memory load)           
 
 # calculate effective foreground color (fnCol.b * fgCol)
+ldtmu0                      # r4 = font color
 and r0, r4, ra5             # r0 = r4.b
 mov ra1.8abcd, r0           # ra1 = r0 duplicated
-sub r0, ra5, r0             # r0 = 255 - r0 (can't access ra1 here, this is for background color)
-v8muld r3, ra1, r3          # multiply the colors
+sub r0, ra5, r0; ldtmu1     # r0 = 255 - r0 (can't access ra1 here, this is for background color)
+v8muld r3, ra1, r4          # multiply the colors
 
 # calculate effective background color ((1.0 - fnCol.b) * bgCol)
-mov ra1.8abcd, r0           # ra1 = r0 duplicated
+mov ra1.8abcd, r0; ldtmu1   # ra1 = r0 duplicated
 sbwait                      # can't access ra1 here, wait for scoreboard
-v8muld r2, ra1, r2          # multiply the colors
+v8muld r2, ra1, r4          # multiply the colors
 
 # add the colors together and output
 v8adds tlbc, r3, r2; thrend
