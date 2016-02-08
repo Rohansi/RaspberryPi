@@ -22,8 +22,8 @@ Terminal Terminal::init(const Framebuffer &framebuffer)
     
     TerminalUniforms &uniforms = result.uniforms;
     uniforms.terminal_width = cx;
-    uniforms.palette_data_fg = &palette[0];
-    uniforms.palette_data_bg = &palette[0];
+    uniforms.palette_data_fg = &terminal_palette[0];
+    uniforms.palette_data_bg = &terminal_palette[0];
     uniforms.font_data = &terminal_font.data[0];
     
     // shader state
