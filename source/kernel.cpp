@@ -8,6 +8,8 @@
 #include "io.h"
 
 // https://www.raspberrypi.org/forums/viewtopic.php?f=72&t=98904#p691475
+// https://www.raspberrypi.org/forums/viewtopic.php?f=72&t=98904&start=25#p703272
+// https://github.com/mrvn/test/blob/master/mmu.cc
 
 extern "C" void _start1();
 extern "C" void _start2();
@@ -51,60 +53,23 @@ void kmain(uint32_t r0, uint32_t r1, uint32_t atags)
             buf[i] = { 0, 0, 0, 0 };
         }
         
-        size_t g = 3;
-        size_t c = 0;
-        
+        size_t t1 = 0, t2 = 0;
         while (true)
         {
-            /*for (size_t i = 0; i < length; i++)
+            size_t i = 0;
+            for (size_t y = 0; y < height; y++)
             {
-                buf[i] = { (uint8_t)(1 + c % 15), 0, (uint8_t)(g++ + c), 0 };
-            }*/
-            
-            /*for (size_t y = 0; y < height; y++)
-            {
-                for (size_t x = 0; x < width; x++)
+                for (size_t x = 0; x < width; x++, i++)
                 {
-                    float posX = (float)x / width;
-                    float posY = (float)y / height;
-                    
-                    float x0 = (posX * 3.5) - 2.5;
-                    float y0 = (posY * 2.0) - 1;
-
-                    // Zooming
-                    x0 /= 0.5f + ((float)c / 100) * 0.5f;
-                    y0 /= 0.5f + ((float)c / 100) * 0.5f;
-
-                    float xx = 0;
-                    float yy = 0;
-
-                    const int maxIteration = 16;
-                    int iteration = 0;
-
-                    while (xx * xx + yy * yy < 2 * 2 && iteration < maxIteration)
-                    {
-                        float xtemp = xx * xx - yy * yy + x0;
-                        yy = 2 * xx * yy + y0;
-                        xx = xtemp;
-
-                        iteration++;
-                    }
-
-                    float colorPercentage = (float)iteration / maxIteration;
-                    uint8_t color = (uint8_t)(colorPercentage * 15);
-
-                    buf[y * width + x] = { 0, color, 0, 0 };
+                    uint8_t col = (uint8_t)(t2 + i);
+                    uint8_t ch = (uint8_t)((t1 + x) ^ (t1 + y));
+                    buf[i] = { (uint8_t)-col, col, ch, 0 };
                 }
-            }*/
-            
-            buf[g++] = { (uint8_t)(c % 16), 0, (uint8_t)c, 0 };
-            g %= length;
+            }
             
             term.render(buf);
-            
-            //uart_getc();
-            c++;
-            //c %= 128;
+            t1++;
+            t2--;
         }
     }
     
